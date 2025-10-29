@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 cc_test(
     name = "audio_element_config_test",
     srcs = ["audio_element_config_test.cc"],
@@ -25,8 +27,10 @@ cc_test(
         "//obr/ambisonic_encoder",
         "//obr/audio_buffer",
         "//obr/common:test_util",
+        "//obr/renderer:audio_element_config",
         "//obr/renderer:audio_element_type",
         "//obr/renderer:obr_impl",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],

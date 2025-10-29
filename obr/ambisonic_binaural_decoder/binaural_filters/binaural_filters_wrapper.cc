@@ -14,20 +14,30 @@
 #include <unordered_map>
 #include <vector>
 
-#include "binaural_filters_1_oa_l.h"
-#include "binaural_filters_1_oa_r.h"
-#include "binaural_filters_2_oa_l.h"
-#include "binaural_filters_2_oa_r.h"
-#include "binaural_filters_3_oa_l.h"
-#include "binaural_filters_3_oa_r.h"
-#include "binaural_filters_4_oa_l.h"
-#include "binaural_filters_4_oa_r.h"
-#include "binaural_filters_5_oa_l.h"
-#include "binaural_filters_5_oa_r.h"
-#include "binaural_filters_6_oa_l.h"
-#include "binaural_filters_6_oa_r.h"
-#include "binaural_filters_7_oa_l.h"
-#include "binaural_filters_7_oa_r.h"
+#include "binaural_filters_1_oa_ambient_l.h"
+#include "binaural_filters_1_oa_ambient_r.h"
+#include "binaural_filters_1_oa_direct_l.h"
+#include "binaural_filters_1_oa_direct_r.h"
+#include "binaural_filters_1_oa_reverberant_l.h"
+#include "binaural_filters_1_oa_reverberant_r.h"
+#include "binaural_filters_2_oa_ambient_l.h"
+#include "binaural_filters_2_oa_ambient_r.h"
+#include "binaural_filters_2_oa_direct_l.h"
+#include "binaural_filters_2_oa_direct_r.h"
+#include "binaural_filters_2_oa_reverberant_l.h"
+#include "binaural_filters_2_oa_reverberant_r.h"
+#include "binaural_filters_3_oa_ambient_l.h"
+#include "binaural_filters_3_oa_ambient_r.h"
+#include "binaural_filters_3_oa_direct_l.h"
+#include "binaural_filters_3_oa_direct_r.h"
+#include "binaural_filters_3_oa_reverberant_l.h"
+#include "binaural_filters_3_oa_reverberant_r.h"
+#include "binaural_filters_4_oa_ambient_l.h"
+#include "binaural_filters_4_oa_ambient_r.h"
+#include "binaural_filters_4_oa_direct_l.h"
+#include "binaural_filters_4_oa_direct_r.h"
+#include "binaural_filters_4_oa_reverberant_l.h"
+#include "binaural_filters_4_oa_reverberant_r.h"
 
 namespace obr {
 
@@ -41,20 +51,32 @@ std::unique_ptr<std::string> BinauralFiltersWrapper::GetFile(
       std::unordered_map<std::string,
                          std::function<std::vector<unsigned char>()>>;
   static const AssetMap kAssetMap = [] {
-    return AssetMap{{"1OA_L", filter_files::BinauralFilters1OAL},
-                    {"1OA_R", filter_files::BinauralFilters1OAR},
-                    {"2OA_L", filter_files::BinauralFilters2OAL},
-                    {"2OA_R", filter_files::BinauralFilters2OAR},
-                    {"3OA_L", filter_files::BinauralFilters3OAL},
-                    {"3OA_R", filter_files::BinauralFilters3OAR},
-                    {"4OA_L", filter_files::BinauralFilters4OAL},
-                    {"4OA_R", filter_files::BinauralFilters4OAR},
-                    {"5OA_L", filter_files::BinauralFilters5OAL},
-                    {"5OA_R", filter_files::BinauralFilters5OAR},
-                    {"6OA_L", filter_files::BinauralFilters6OAL},
-                    {"6OA_R", filter_files::BinauralFilters6OAR},
-                    {"7OA_L", filter_files::BinauralFilters7OAL},
-                    {"7OA_R", filter_files::BinauralFilters7OAR}};
+    return AssetMap{
+        {"1OAAmbientL", filter_files::BinauralFilters1OAAmbientL},
+        {"1OAAmbientR", filter_files::BinauralFilters1OAAmbientR},
+        {"1OADirectL", filter_files::BinauralFilters1OADirectL},
+        {"1OADirectR", filter_files::BinauralFilters1OADirectR},
+        {"1OAReverberantL", filter_files::BinauralFilters1OAReverberantL},
+        {"1OAReverberantR", filter_files::BinauralFilters1OAReverberantR},
+        {"2OAAmbientL", filter_files::BinauralFilters2OAAmbientL},
+        {"2OAAmbientR", filter_files::BinauralFilters2OAAmbientR},
+        {"2OADirectL", filter_files::BinauralFilters2OADirectL},
+        {"2OADirectR", filter_files::BinauralFilters2OADirectR},
+        {"2OAReverberantL", filter_files::BinauralFilters2OAReverberantL},
+        {"2OAReverberantR", filter_files::BinauralFilters2OAReverberantR},
+        {"3OAAmbientL", filter_files::BinauralFilters3OAAmbientL},
+        {"3OAAmbientR", filter_files::BinauralFilters3OAAmbientR},
+        {"3OADirectL", filter_files::BinauralFilters3OADirectL},
+        {"3OADirectR", filter_files::BinauralFilters3OADirectR},
+        {"3OAReverberantL", filter_files::BinauralFilters3OAReverberantL},
+        {"3OAReverberantR", filter_files::BinauralFilters3OAReverberantR},
+        {"4OAAmbientL", filter_files::BinauralFilters4OAAmbientL},
+        {"4OAAmbientR", filter_files::BinauralFilters4OAAmbientR},
+        {"4OADirectL", filter_files::BinauralFilters4OADirectL},
+        {"4OADirectR", filter_files::BinauralFilters4OADirectR},
+        {"4OAReverberantL", filter_files::BinauralFilters4OAReverberantL},
+        {"4OAReverberantR", filter_files::BinauralFilters4OAReverberantR},
+    };
   }();
 
   auto it = kAssetMap.find(filename);

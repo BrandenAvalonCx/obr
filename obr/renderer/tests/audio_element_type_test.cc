@@ -30,12 +30,6 @@ TEST(AudioElementTypeTest, AudioElementTypeToString) {
               IsOkAndHolds("k3OA"));
   EXPECT_THAT(GetAudioElementTypeStr(AudioElementType::k4OA),
               IsOkAndHolds("k4OA"));
-  EXPECT_THAT(GetAudioElementTypeStr(AudioElementType::k5OA),
-              IsOkAndHolds("k5OA"));
-  EXPECT_THAT(GetAudioElementTypeStr(AudioElementType::k6OA),
-              IsOkAndHolds("k6OA"));
-  EXPECT_THAT(GetAudioElementTypeStr(AudioElementType::k7OA),
-              IsOkAndHolds("k7OA"));
   EXPECT_THAT(GetAudioElementTypeStr(AudioElementType::kLayoutMono),
               IsOkAndHolds("kLayoutMono"));
   EXPECT_THAT(GetAudioElementTypeStr(AudioElementType::kLayoutStereo),
@@ -76,12 +70,6 @@ TEST(AudioElementTypeTest, AudioElementTypeFromString) {
               IsOkAndHolds(AudioElementType::k3OA));
   EXPECT_THAT(GetAudioElementTypeFromStr("k4OA"),
               IsOkAndHolds(AudioElementType::k4OA));
-  EXPECT_THAT(GetAudioElementTypeFromStr("k5OA"),
-              IsOkAndHolds(AudioElementType::k5OA));
-  EXPECT_THAT(GetAudioElementTypeFromStr("k6OA"),
-              IsOkAndHolds(AudioElementType::k6OA));
-  EXPECT_THAT(GetAudioElementTypeFromStr("k7OA"),
-              IsOkAndHolds(AudioElementType::k7OA));
   EXPECT_THAT(GetAudioElementTypeFromStr("kLayoutMono"),
               IsOkAndHolds(AudioElementType::kLayoutMono));
   EXPECT_THAT(GetAudioElementTypeFromStr("kLayoutStereo"),
@@ -124,9 +112,6 @@ TEST(AudioElementTypeTest, GetAvailableAudioElementTypesAsStr) {
       "k2OA",
       "k3OA",
       "k4OA",
-      "k5OA",
-      "k6OA",
-      "k7OA",
       "kLayoutMono",
       "kLayoutStereo",
       "kLayout3_1_2_ch",
@@ -151,9 +136,6 @@ TEST(AudioElementTypeTest, IsAmbisonicsType) {
   EXPECT_TRUE(IsAmbisonicsType(AudioElementType::k2OA));
   EXPECT_TRUE(IsAmbisonicsType(AudioElementType::k3OA));
   EXPECT_TRUE(IsAmbisonicsType(AudioElementType::k4OA));
-  EXPECT_TRUE(IsAmbisonicsType(AudioElementType::k5OA));
-  EXPECT_TRUE(IsAmbisonicsType(AudioElementType::k6OA));
-  EXPECT_TRUE(IsAmbisonicsType(AudioElementType::k7OA));
   EXPECT_FALSE(IsAmbisonicsType(AudioElementType::kLayoutMono));
   EXPECT_FALSE(IsAmbisonicsType(AudioElementType::kLayoutStereo));
   EXPECT_FALSE(IsAmbisonicsType(AudioElementType::kLayout3_1_2_ch));
@@ -176,9 +158,6 @@ TEST(AudioElementTypeTest, IsLoudspeakerLayoutType) {
   EXPECT_FALSE(IsLoudspeakerLayoutType(AudioElementType::k2OA));
   EXPECT_FALSE(IsLoudspeakerLayoutType(AudioElementType::k3OA));
   EXPECT_FALSE(IsLoudspeakerLayoutType(AudioElementType::k4OA));
-  EXPECT_FALSE(IsLoudspeakerLayoutType(AudioElementType::k5OA));
-  EXPECT_FALSE(IsLoudspeakerLayoutType(AudioElementType::k6OA));
-  EXPECT_FALSE(IsLoudspeakerLayoutType(AudioElementType::k7OA));
   EXPECT_TRUE(IsLoudspeakerLayoutType(AudioElementType::kLayoutMono));
   EXPECT_TRUE(IsLoudspeakerLayoutType(AudioElementType::kLayoutStereo));
   EXPECT_TRUE(IsLoudspeakerLayoutType(AudioElementType::kLayout3_1_2_ch));
@@ -201,9 +180,6 @@ TEST(AudioElementTypeTest, IsObjectType) {
   EXPECT_FALSE(IsObjectType(AudioElementType::k2OA));
   EXPECT_FALSE(IsObjectType(AudioElementType::k3OA));
   EXPECT_FALSE(IsObjectType(AudioElementType::k4OA));
-  EXPECT_FALSE(IsObjectType(AudioElementType::k5OA));
-  EXPECT_FALSE(IsObjectType(AudioElementType::k6OA));
-  EXPECT_FALSE(IsObjectType(AudioElementType::k7OA));
   EXPECT_FALSE(IsObjectType(AudioElementType::kLayoutMono));
   EXPECT_FALSE(IsObjectType(AudioElementType::kLayoutStereo));
   EXPECT_FALSE(IsObjectType(AudioElementType::kLayout3_1_2_ch));
@@ -226,9 +202,6 @@ TEST(AudioElementTypeTest, GetAmbisonicOrder) {
   EXPECT_THAT(GetAmbisonicOrder(AudioElementType::k2OA), IsOkAndHolds(2));
   EXPECT_THAT(GetAmbisonicOrder(AudioElementType::k3OA), IsOkAndHolds(3));
   EXPECT_THAT(GetAmbisonicOrder(AudioElementType::k4OA), IsOkAndHolds(4));
-  EXPECT_THAT(GetAmbisonicOrder(AudioElementType::k5OA), IsOkAndHolds(5));
-  EXPECT_THAT(GetAmbisonicOrder(AudioElementType::k6OA), IsOkAndHolds(6));
-  EXPECT_THAT(GetAmbisonicOrder(AudioElementType::k7OA), IsOkAndHolds(7));
   EXPECT_FALSE(GetAmbisonicOrder(AudioElementType::kLayoutMono).ok());
   EXPECT_FALSE(GetAmbisonicOrder(AudioElementType::kLayoutStereo).ok());
   EXPECT_FALSE(GetAmbisonicOrder(AudioElementType::kLayout3_1_2_ch).ok());

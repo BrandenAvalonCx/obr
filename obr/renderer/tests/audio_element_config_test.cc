@@ -40,5 +40,25 @@ TEST(AudioElementConfigTest, CreateMonoObjectAudioElementConfig) {
   }
 }
 
+// Test construction with all BinauralFilterProfile values.
+TEST(AudioElementConfigTest, CreateAudioElementConfigWithFilterType) {
+  using FilterType = BinauralFilterProfile;
+  AudioElementConfig direct_config(AudioElementType::kLayoutMono,
+                                   FilterType::kDirect);
+  EXPECT_EQ(direct_config.GetType(), AudioElementType::kLayoutMono);
+  EXPECT_EQ(direct_config.GetBinauralFilterProfile(), FilterType::kDirect);
+
+  AudioElementConfig ambient_config(AudioElementType::kLayoutMono,
+                                    FilterType::kAmbient);
+  EXPECT_EQ(ambient_config.GetType(), AudioElementType::kLayoutMono);
+  EXPECT_EQ(ambient_config.GetBinauralFilterProfile(), FilterType::kAmbient);
+
+  AudioElementConfig reverberant_config(AudioElementType::kLayoutMono,
+                                        FilterType::kReverberant);
+  EXPECT_EQ(reverberant_config.GetType(), AudioElementType::kLayoutMono);
+  EXPECT_EQ(reverberant_config.GetBinauralFilterProfile(),
+            FilterType::kReverberant);
+}
+
 }  // namespace
 }  // namespace obr

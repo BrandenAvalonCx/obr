@@ -23,11 +23,13 @@
 
 namespace obr {
 
-AudioElementConfig::AudioElementConfig(AudioElementType type)
+AudioElementConfig::AudioElementConfig(AudioElementType type,
+                                       BinauralFilterProfile distance_type)
     : type_(type),
       first_channel_index_(0),
       number_of_input_channels_(0),
-      binaural_filters_ambisonic_order_(0) {
+      binaural_filters_ambisonic_order_(0),
+      binaural_filter_profile_(distance_type) {
   // Configure the audio element based on the requested type.
   if (IsAmbisonicsType(type)) {
     // Get the Ambisonic order from the type.
@@ -54,8 +56,7 @@ AudioElementConfig::AudioElementConfig(AudioElementType type)
     LoudspeakerLayouts lspk_layouts;
     loudspeaker_channels_ = lspk_layouts.getLoudspeakerLayout(type);
 
-    // Set binaural filters to the highest order available.
-    binaural_filters_ambisonic_order_ = kMaxSupportedAmbisonicOrder;
+    binaural_filters_ambisonic_order_ = kDefaultBinauralFiltersAmbisonicOrder;
     number_of_input_channels_ = loudspeaker_channels_.size();
   } else if (IsObjectType(type)) {
     if (type == AudioElementType::kObjectMono) {
@@ -68,8 +69,7 @@ AudioElementConfig::AudioElementConfig(AudioElementType type)
       LOG(ERROR) << "Unsupported object type.";
     }
 
-    // Set binaural filters to the highest order available.
-    binaural_filters_ambisonic_order_ = kMaxSupportedAmbisonicOrder;
+    binaural_filters_ambisonic_order_ = kDefaultBinauralFiltersAmbisonicOrder;
     number_of_input_channels_ = object_channels_.size();
 
   } else {

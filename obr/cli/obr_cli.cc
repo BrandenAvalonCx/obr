@@ -19,6 +19,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "obr/cli/obr_cli_lib.h"
+#include "obr/renderer/audio_element_config.h"
 #include "obr/renderer/audio_element_type.h"
 
 // TODO(b/402659240): Support all input types listed in "audio_element_type.h".
@@ -31,8 +32,8 @@
  */
 ABSL_FLAG(obr::AudioElementType, input_type,
           obr::AudioElementType::kInvalidType,
-          "Type of input. Currently `3OA`, `7OA`, `7.1.4 `, and `OBA` are "
-          "supported.");
+          "Type of input. Currently `1OA`, `2OA`, `3OA`, `4OA`, `7.1.4 `, and "
+          "`OBA` are supported.");
 ABSL_FLAG(
     std::string, oba_metadata_file, "",
     "Full path to the textproto file containing object metadata if input type "
@@ -43,6 +44,10 @@ ABSL_FLAG(std::string, output_file, "/tmp/output.wav",
 ABSL_FLAG(
     uint64_t, buffer_size, 256,
     "Processing buffer size; i.e., number of sample per channel per frame.");
+ABSL_FLAG(
+    obr::BinauralFilterProfile, filter_type,
+    obr::BinauralFilterProfile::kAmbient,
+    "Binaural filter type: Direct, Ambient, or Reverberant (default: Ambient)");
 
 namespace obr {
 
@@ -52,10 +57,14 @@ bool AbslParseFlag(absl::string_view text, AudioElementType* input_type,
   if (text.empty()) {
     *error = "No input type specified.";
     return false;
+  } else if (text == "1OA") {
+    *input_type = AudioElementType::k1OA;
+  } else if (text == "2OA") {
+    *input_type = AudioElementType::k2OA;
   } else if (text == "3OA") {
     *input_type = AudioElementType::k3OA;
-  } else if (text == "7OA") {
-    *input_type = AudioElementType::k7OA;
+  } else if (text == "4OA") {
+    *input_type = AudioElementType::k4OA;
   } else if (text == "7.1.4") {
     *input_type = AudioElementType::kLayout7_1_4_ch;
   } else if (text == "OBA") {
@@ -70,10 +79,14 @@ bool AbslParseFlag(absl::string_view text, AudioElementType* input_type,
 std::string AbslUnparseFlag(AudioElementType input_type) {
   switch (input_type) {
     using enum AudioElementType;
+    case k1OA:
+      return "1OA";
+    case k2OA:
+      return "2OA";
     case k3OA:
       return "3OA";
-    case k7OA:
-      return "7OA";
+    case k4OA:
+      return "4OA";
     case kLayout7_1_4_ch:
       return "7.1.4";
     case kObjectMono:
@@ -83,19 +96,52 @@ std::string AbslUnparseFlag(AudioElementType input_type) {
   }
 }
 
+bool AbslParseFlag(absl::string_view text, BinauralFilterProfile* filter_type,
+                   std::string* error) {
+  if (text.empty()) {
+    *error = "No filter type specified.";
+    return false;
+  } else if (text == "Direct") {
+    *filter_type = BinauralFilterProfile::kDirect;
+  } else if (text == "Ambient") {
+    *filter_type = BinauralFilterProfile::kAmbient;
+  } else if (text == "Reverberant") {
+    *filter_type = BinauralFilterProfile::kReverberant;
+  } else {
+    *error = "Unsupported filter type.";
+    return false;
+  }
+  return true;
+}
+
+std::string AbslUnparseFlag(BinauralFilterProfile filter_type) {
+  switch (filter_type) {
+    using enum BinauralFilterProfile;
+    case BinauralFilterProfile::kDirect:
+      return "Direct";
+    case BinauralFilterProfile::kAmbient:
+      return "Ambient";
+    case BinauralFilterProfile::kReverberant:
+      return "Reverberant";
+    default:
+      return "Unsupported filter type.";
+  }
+}
+
 }  // namespace obr
 
 int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage(argv[0]);
   absl::ParseCommandLine(argc, argv);
+
   const auto status = obr::ObrCliMain(
       absl::GetFlag(FLAGS_input_type), absl::GetFlag(FLAGS_oba_metadata_file),
       absl::GetFlag(FLAGS_input_file), absl::GetFlag(FLAGS_output_file),
-      static_cast<size_t>(absl::GetFlag(FLAGS_buffer_size)));
+      static_cast<size_t>(absl::GetFlag(FLAGS_buffer_size)),
+      absl::GetFlag(FLAGS_filter_type));
   if (!status.ok()) {
     LOG(ERROR) << status;
     return 1;
   }
-
   return 0;
 }

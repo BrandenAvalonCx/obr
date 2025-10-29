@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 package(default_visibility = ["//obr/cli/tests:__subpackages__"])
 
 cc_test(
@@ -10,6 +12,7 @@ cc_test(
     shard_count = 4,
     deps = [
         "//obr/cli:obr_cli_lib",
+        "//obr/renderer:audio_element_config",
         "//obr/renderer:audio_element_type",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",

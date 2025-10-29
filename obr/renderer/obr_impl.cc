@@ -22,6 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/synchronization/mutex.h"
 #include "obr/ambisonic_binaural_decoder/ambisonic_binaural_decoder.h"
+#include "obr/ambisonic_binaural_decoder/fft_manager.h"
 #include "obr/ambisonic_binaural_decoder/sh_hrir_creator.h"
 #include "obr/ambisonic_encoder/ambisonic_encoder.h"
 #include "obr/ambisonic_rotator/ambisonic_rotator.h"
@@ -50,8 +51,17 @@ ObrImpl::ObrImpl(int buffer_size_per_channel, int sampling_rate)
       head_tracking_enabled_(false),
       world_rotation_(WorldRotation()),
       fft_manager_(buffer_size_per_channel_) {
-  CHECK_GT(buffer_size_per_channel_, 0);
-  CHECK_GT(sampling_rate_, 0);
+  CHECK_GT(buffer_size_per_channel, 0)
+      << "Buffer size per channel must be greater than 0.";
+  CHECK_GT(sampling_rate_, 0) << "Sampling rate must be greater than 0.";
+
+  CHECK_GE(buffer_size_per_channel, FftManager::kMinFftSize)
+      << "Buffer size per channel must be at least " << FftManager::kMinFftSize
+      << " samples.";
+
+  CHECK_LE(buffer_size_per_channel, kMaxSupportedNumFrames)
+      << "Only frame lengths up to " << kMaxSupportedNumFrames
+      << " are supported.";
 }
 
 ObrImpl::~ObrImpl() = default;
@@ -60,7 +70,7 @@ absl::Status ObrImpl::ResetDsp() {
   LOG(INFO) << "Resetting DSP.";
 
   // Enable the lock.
-  absl::MutexLock lock(&mutex_);
+  absl::MutexLock lock(mutex_);
 
   // Release resources.
   ambisonic_binaural_decoder_.reset();
@@ -86,8 +96,11 @@ absl::Status ObrImpl::InitializeDsp() {
   // Analyze the list of requested audio elements and initialize the necessary
   // DSP.
   // For now, until rendering of multiple AEs is implemented, initialize DSP
-  // using Ambisonic order of the first (and only) element.
+  // using Ambisonic order and binaural filter type of the first Audio Element
+  // element.
   const size_t order = audio_elements_[0].GetBinauralFiltersAmbisonicOrder();
+  const BinauralFilterProfile filter_type =
+      audio_elements_[0].GetBinauralFilterProfile();
   const size_t number_of_input_channels = GetNumberOfInputChannels();
 
   CHECK_NE(order, 0);
@@ -103,7 +116,7 @@ absl::Status ObrImpl::InitializeDsp() {
   RETURN_IF_NOT_OK(ResetDsp());
 
   // Enable the lock.
-  absl::MutexLock lock(&mutex_);
+  absl::MutexLock lock(mutex_);
 
   // Setup Ambisonic mix bed.
   ambisonic_mix_bed_ =
@@ -128,13 +141,30 @@ absl::Status ObrImpl::InitializeDsp() {
   // Initialize HOA rotator.
   ambisonic_rotator_ = std::make_unique<AmbisonicRotator>(order);
 
-  // Initialize Ambisonic binaural decoder.
-  // Load filters matching the selected operational Ambisonic order.
-  std::string order_string = std::to_string(order);
-  sh_hrirs_L_ = CreateShHrirsFromAssets(order_string + "OA_L", sampling_rate_,
-                                        &resampler_);
-  sh_hrirs_R_ = CreateShHrirsFromAssets(order_string + "OA_R", sampling_rate_,
-                                        &resampler_);
+  // Load filters matching the selected operational Ambisonic order and filter
+  // type.
+  const std::string order_string = std::to_string(order);
+  std::string filter_type_string;
+  switch (filter_type) {
+    case BinauralFilterProfile::kDirect:
+      filter_type_string = "Direct";
+      break;
+    case BinauralFilterProfile::kAmbient:
+      filter_type_string = "Ambient";
+      break;
+    case BinauralFilterProfile::kReverberant:
+      filter_type_string = "Reverberant";
+      break;
+    default:
+      return absl::InvalidArgumentError("Unknown binaural filter type.");
+  }
+
+  sh_hrirs_L_ =
+      CreateShHrirsFromAssets(order_string + "OA" + filter_type_string + "L",
+                              sampling_rate_, &resampler_);
+  sh_hrirs_R_ =
+      CreateShHrirsFromAssets(order_string + "OA" + filter_type_string + "R",
+                              sampling_rate_, &resampler_);
 
   CHECK_EQ(sh_hrirs_L_->num_channels(), sh_hrirs_R_->num_channels());
   CHECK_EQ(sh_hrirs_L_->num_frames(), sh_hrirs_R_->num_frames());
@@ -157,7 +187,7 @@ void ObrImpl::Process(const AudioBuffer& input_buffer,
   CHECK_EQ(output_buffer->num_frames(), buffer_size_per_channel_);
 
   // Enable the lock.
-  absl::MutexLock lock(&mutex_);
+  absl::MutexLock lock(mutex_);
 
   // Pass audio through Ambisonic Encoder and render to Ambisonic
   // mix bed.
@@ -261,11 +291,13 @@ size_t ObrImpl::GetNumberOfInputChannels() {
 
 size_t ObrImpl::GetNumberOfAudioElements() { return audio_elements_.size(); }
 
-absl::Status ObrImpl::AddAudioElement(const AudioElementType type) {
-  // Impose a restriction that all audio elements must be of the same type.
-  // This check will be removed in the future to allow for rendering of
-  // different types of audio elements at the same pass of the binaural
-  // Ambisonic decoder.
+absl::Status ObrImpl::AddAudioElement(const AudioElementType type,
+                                      BinauralFilterProfile filter_profile) {
+  // Impose a restriction that all audio elements must be of the same type and
+  // use the same type of binaural filters. This check will be removed in the
+  // future to allow for rendering of different types of audio elements with
+  // different binaural filter type settings using a minimum required number of
+  // passes of the binaural Ambisonic decoder.
   if (!audio_elements_.empty() && audio_elements_.back().GetType() != type) {
     LOG(ERROR) << "Rendering only the same type of Audio Elements is supported."
                << " Remove the existing Audio Element before adding a new one.";
@@ -273,8 +305,18 @@ absl::Status ObrImpl::AddAudioElement(const AudioElementType type) {
         "Only same-typed audio elements are supported.");
   }
 
-  // Create an audio element configuration.
-  auto audio_element_config = AudioElementConfig(type);
+  if (!audio_elements_.empty() &&
+      audio_elements_.back().GetBinauralFilterProfile() != filter_profile) {
+    LOG(ERROR)
+        << "Rendering only Audio Elements with the same binaural filter type "
+        << "is supported. Remove the existing Audio Element before adding a "
+        << "new one.";
+    return absl::FailedPreconditionError(
+        "Only same-type binaural filter profiles are supported.");
+  }
+
+  // Create an audio element configuration with filter type.
+  auto audio_element_config = AudioElementConfig(type, filter_profile);
 
   if (!audio_elements_.empty()) {
     // If there are already audio elements, alter the first channel in the new
@@ -424,6 +466,7 @@ std::string ObrImpl::GetAudioElementConfigLogMessage() {
                                                         {"AE ID", 5},
                                                         {"Type", 15},
                                                         {"BinFlt xOA", 10},
+                                                        {"BinFlt Profile", 14},
                                                         // Channel data
                                                         {"Ch ID", 5},
                                                         {"Ch Label", 10},
@@ -475,19 +518,31 @@ std::string ObrImpl::GetAudioElementConfigLogMessage() {
         "|" +
         PadWithSpaces(
             std::to_string(audio_element.GetBinauralFiltersAmbisonicOrder()),
-            header[2].second);
+            header[2].second) +
+        "|" +
+        PadWithSpaces((audio_element.GetBinauralFilterProfile() ==
+                       BinauralFilterProfile::kDirect)
+                          ? "Direct"
+                      : (audio_element.GetBinauralFilterProfile() ==
+                         BinauralFilterProfile::kAmbient)
+                          ? "Ambient"
+                      : (audio_element.GetBinauralFilterProfile() ==
+                         BinauralFilterProfile::kReverberant)
+                          ? "Reverberant"
+                          : "N/A",
+                      header[3].second);
 
     std::string channel_data;
 
     // Render Ambisonic channels.
     for (auto& channel : audio_element.GetAmbisonicChannels()) {
       channel_data = PadWithSpaces(std::to_string(channel.GetChannelIndex()),
-                                   header[3].second) +
-                     "|" + PadWithSpaces(channel.GetID(), header[4].second) +
-                     "|" + PadWithSpaces("N/A", header[5].second) + "|" +
-                     PadWithSpaces("N/A", header[6].second) + "|" +
+                                   header[4].second) +
+                     "|" + PadWithSpaces(channel.GetID(), header[5].second) +
+                     "|" + PadWithSpaces("N/A", header[6].second) + "|" +
                      PadWithSpaces("N/A", header[7].second) + "|" +
-                     PadWithSpaces("N/A", header[8].second);
+                     PadWithSpaces("N/A", header[8].second) + "|" +
+                     PadWithSpaces("N/A", header[9].second);
 
       log_message += RenderRow(element_data, channel_data);
     }
@@ -496,18 +551,18 @@ std::string ObrImpl::GetAudioElementConfigLogMessage() {
     for (auto& channel : audio_element.GetLoudspeakerChannels()) {
       channel_data =
           PadWithSpaces(std::to_string(channel.GetChannelIndex()),
-                        header[3].second) +
-          "|" + PadWithSpaces(channel.GetID(), header[4].second) + "|" +
+                        header[4].second) +
+          "|" + PadWithSpaces(channel.GetID(), header[5].second) + "|" +
           PadWithSpaces(AEDValueToString(channel.GetAzimuth()),
-                        header[5].second) +
-          "|" +
-          PadWithSpaces(AEDValueToString(channel.GetElevation()),
                         header[6].second) +
           "|" +
-          PadWithSpaces(AEDValueToString(channel.GetDistance()),
+          PadWithSpaces(AEDValueToString(channel.GetElevation()),
                         header[7].second) +
           "|" +
-          PadWithSpaces(BoolToYesNo(channel.GetIsLFE()), header[8].second);
+          PadWithSpaces(AEDValueToString(channel.GetDistance()),
+                        header[8].second) +
+          "|" +
+          PadWithSpaces(BoolToYesNo(channel.GetIsLFE()), header[9].second);
 
       log_message += RenderRow(element_data, channel_data);
     }
@@ -515,18 +570,18 @@ std::string ObrImpl::GetAudioElementConfigLogMessage() {
     // Render object channels.
     for (auto& channel : audio_element.GetObjectChannels()) {
       channel_data = PadWithSpaces(std::to_string(channel.GetChannelIndex()),
-                                   header[3].second) +
-                     "|" + PadWithSpaces(channel.GetID(), header[4].second) +
+                                   header[4].second) +
+                     "|" + PadWithSpaces(channel.GetID(), header[5].second) +
                      "|" +
                      PadWithSpaces(AEDValueToString(channel.GetAzimuth()),
-                                   header[5].second) +
-                     "|" +
-                     PadWithSpaces(AEDValueToString(channel.GetElevation()),
                                    header[6].second) +
                      "|" +
-                     PadWithSpaces(AEDValueToString(channel.GetDistance()),
+                     PadWithSpaces(AEDValueToString(channel.GetElevation()),
                                    header[7].second) +
-                     "|" + PadWithSpaces("N/A", header[8].second);
+                     "|" +
+                     PadWithSpaces(AEDValueToString(channel.GetDistance()),
+                                   header[8].second) +
+                     "|" + PadWithSpaces("N/A", header[9].second);
 
       log_message += RenderRow(element_data, channel_data);
     }

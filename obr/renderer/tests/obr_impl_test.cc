@@ -13,18 +13,23 @@
 #include <utility>
 #include <vector>
 
+#include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "obr/ambisonic_encoder/ambisonic_encoder.h"
 #include "obr/audio_buffer/audio_buffer.h"
 #include "obr/common/test_util.h"
+#include "obr/renderer/audio_element_config.h"
 #include "obr/renderer/audio_element_type.h"
 
 namespace obr {
 namespace {
 
 using ::absl_testing::IsOk;
+
+constexpr int kBufferSizePerChannel = 44;
+constexpr int kSamplingRate = 48000;
 
 /*!\brief Create AudioBuffer with Kronecker delta encoded to Ambisonics.
  *
@@ -74,9 +79,6 @@ double GetBroadbandILD(const AudioBuffer::Channel& left,
 
 // Test initialization of the ObrImpl class.
 TEST(ObrImplTest, TestInitialization) {
-  const int kBufferSizePerChannel = 12;
-  const int kSamplingRate = 48000;
-
   ObrImpl renderer(kBufferSizePerChannel, kSamplingRate);
   EXPECT_EQ(renderer.GetBufferSizePerChannel(), kBufferSizePerChannel);
   EXPECT_EQ(renderer.GetSamplingRate(), kSamplingRate);
@@ -86,9 +88,6 @@ TEST(ObrImplTest, TestInitialization) {
 
 // Test adding and removing 1 audio element.
 TEST(ObrImplTest, TestAddAndRemoveAudioElement) {
-  const int kBufferSizePerChannel = 12;
-  const int kSamplingRate = 48000;
-
   ObrImpl renderer(kBufferSizePerChannel, kSamplingRate);
   EXPECT_THAT(renderer.AddAudioElement(AudioElementType::k3OA), IsOk());
   EXPECT_EQ(renderer.GetNumberOfInputChannels(), 16);
@@ -99,9 +98,6 @@ TEST(ObrImplTest, TestAddAndRemoveAudioElement) {
 
 // Test adding 3OA and 7.1.4 Audio Elements.
 TEST(ObrImplTest, TestAddAudioElements) {
-  const int kBufferSizePerChannel = 12;
-  const int kSamplingRate = 48000;
-
   ObrImpl renderer(kBufferSizePerChannel, kSamplingRate);
   EXPECT_THAT(renderer.AddAudioElement(AudioElementType::k3OA), IsOk());
   EXPECT_EQ(renderer.GetNumberOfInputChannels(), 16);
@@ -122,13 +118,14 @@ TEST(ObrImplTest, TestRenderAmbisonicsAndMeasureBroadbandILD) {
   const double kILDAccuracyThresholdDb = 3;
 
   std::vector<AudioElementType> audio_elements = {
-      AudioElementType::k1OA, AudioElementType::k2OA, AudioElementType::k3OA,
-      AudioElementType::k4OA, AudioElementType::k5OA, AudioElementType::k6OA,
-      AudioElementType::k7OA,
+      AudioElementType::k1OA,
+      AudioElementType::k2OA,
+      AudioElementType::k3OA,
+      AudioElementType::k4OA,
   };
 
   const std::pair<float, double> azimuth_ILDs[] = {
-      {0.0f, 0.0}, {90.0f, 12.0}, {180.0f, 0.0}, {270.0f, -12.0}};
+      {0.0f, 0.0}, {90.0f, 15.0}, {180.0f, 0.0}, {270.0f, -15.0}};
 
   for (const auto audio_element : audio_elements) {
     for (const auto& azimuthILD : azimuth_ILDs) {
@@ -158,9 +155,6 @@ TEST(ObrImplTest, TestRenderAmbisonicsAndMeasureBroadbandILD) {
 // Fails when input AudioBuffer has different number of channels than the
 // declared number of input channels.
 TEST(ObrImplTest, TestProcessAudioBufferWithWrongNumberOfChannels) {
-  const int kBufferSizePerChannel = 12;
-  const int kSamplingRate = 48000;
-
   ObrImpl renderer(kBufferSizePerChannel, kSamplingRate);
   EXPECT_THAT(renderer.AddAudioElement(AudioElementType::k3OA), IsOk());
 
@@ -173,9 +167,6 @@ TEST(ObrImplTest, TestProcessAudioBufferWithWrongNumberOfChannels) {
 // Fails when input AudioBuffer has different number of frames than the declared
 // buffer size.
 TEST(ObrImplTest, TestProcessAudioBufferWithWrongBufferSize) {
-  const int kBufferSizePerChannel = 12;
-  const int kSamplingRate = 48000;
-
   ObrImpl renderer(kBufferSizePerChannel, kSamplingRate);
   EXPECT_THAT(renderer.AddAudioElement(AudioElementType::k3OA), IsOk());
 
@@ -187,9 +178,6 @@ TEST(ObrImplTest, TestProcessAudioBufferWithWrongBufferSize) {
 
 // Fails when output AudioBuffer is not initialized.
 TEST(ObrImplTest, TestProcessAudioBufferWithUninitializedOutputBuffer) {
-  const int kBufferSizePerChannel = 12;
-  const int kSamplingRate = 48000;
-
   ObrImpl renderer(kBufferSizePerChannel, kSamplingRate);
   EXPECT_THAT(renderer.AddAudioElement(AudioElementType::k3OA), IsOk());
 
@@ -200,9 +188,6 @@ TEST(ObrImplTest, TestProcessAudioBufferWithUninitializedOutputBuffer) {
 
 // Fails when output AudioBuffer has different number of channels than 2.
 TEST(ObrImplTest, TestProcessAudioBufferWithWrongNumberOfOutputChannels) {
-  const int kBufferSizePerChannel = 12;
-  const int kSamplingRate = 48000;
-
   ObrImpl renderer(kBufferSizePerChannel, kSamplingRate);
   EXPECT_THAT(renderer.AddAudioElement(AudioElementType::k3OA), IsOk());
 
@@ -215,9 +200,6 @@ TEST(ObrImplTest, TestProcessAudioBufferWithWrongNumberOfOutputChannels) {
 // Fails when output AudioBuffer has different number of frames than the
 // declared buffer size.
 TEST(ObrImplTest, TestProcessAudioBufferWithWrongOutputBufferSize) {
-  const int kBufferSizePerChannel = 12;
-  const int kSamplingRate = 48000;
-
   ObrImpl renderer(kBufferSizePerChannel, kSamplingRate);
   EXPECT_THAT(renderer.AddAudioElement(AudioElementType::k3OA), IsOk());
 
@@ -225,6 +207,41 @@ TEST(ObrImplTest, TestProcessAudioBufferWithWrongOutputBufferSize) {
   AudioBuffer output_buffer(2, kBufferSizePerChannel + 1);
 
   EXPECT_DEATH(renderer.Process(input_buffer, &output_buffer), "");
+}
+
+// Test that adding multiple audio elements with different audio element types,
+// but with the same binaural filter type will fail.
+TEST(ObrImplTest,
+     TestAddMultipleAudioElementsWithDifferentTypesSameFilterTypeFails) {
+  ObrImpl renderer(kBufferSizePerChannel, kSamplingRate);
+  // Add first element with k3OA and Direct filter
+  EXPECT_THAT(renderer.AddAudioElement(AudioElementType::k3OA,
+                                       BinauralFilterProfile::kDirect),
+              IsOk());
+  // Attempt to add second element with k1OA and Direct filter (should fail)
+  absl::Status status = renderer.AddAudioElement(
+      AudioElementType::k1OA, BinauralFilterProfile::kDirect);
+  EXPECT_FALSE(status.ok());
+  // Clean up
+  EXPECT_THAT(renderer.RemoveLastAudioElement(), IsOk());
+}
+
+// Test that adding multiple audio elements of the same type with different
+// binaural filter types will fail.
+TEST(ObrImplTest,
+     TestAddMultipleAudioElementsSameTypeDifferentFilterTypesFails) {
+  ObrImpl renderer(kBufferSizePerChannel, kSamplingRate);
+  // Add first element with k3OA and Direct filter
+  EXPECT_THAT(renderer.AddAudioElement(AudioElementType::k3OA,
+                                       BinauralFilterProfile::kDirect),
+              IsOk());
+  // Attempt to add second element with k3OA and Reverberant filter (should
+  // fail)
+  absl::Status status = renderer.AddAudioElement(
+      AudioElementType::k3OA, BinauralFilterProfile::kReverberant);
+  EXPECT_FALSE(status.ok());
+  // Clean up
+  EXPECT_THAT(renderer.RemoveLastAudioElement(), IsOk());
 }
 
 }  // namespace

@@ -19,7 +19,7 @@ include(FetchContent)
 FetchContent_Declare(
         absl
         GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
-        GIT_TAG 4447c7562e3bc702ade25105912dce503f0c4010
+        GIT_TAG d38452e1ee03523a208362186fd42248ff2609f6
 )
 FetchContent_MakeAvailable(absl)
 
@@ -69,34 +69,54 @@ set(SourceFiles
         obr/ambisonic_binaural_decoder/wav.h
         obr/ambisonic_binaural_decoder/wav_reader.cc
         obr/ambisonic_binaural_decoder/wav_reader.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_l.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_l.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_r.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_r.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_l.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_l.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_r.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_r.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_l.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_l.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_r.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_r.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_l.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_l.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_r.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_r.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_5_oa_l.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_5_oa_l.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_5_oa_r.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_5_oa_r.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_6_oa_l.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_6_oa_l.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_6_oa_r.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_6_oa_r.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_7_oa_l.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_7_oa_l.h
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_7_oa_r.cc
-        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_7_oa_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_direct_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_direct_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_direct_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_direct_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_ambient_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_ambient_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_ambient_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_ambient_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_reverberant_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_reverberant_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_reverberant_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_1_oa_reverberant_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_direct_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_direct_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_direct_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_direct_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_ambient_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_ambient_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_ambient_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_ambient_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_reverberant_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_reverberant_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_reverberant_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_2_oa_reverberant_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_direct_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_direct_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_direct_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_direct_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_ambient_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_ambient_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_ambient_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_ambient_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_reverberant_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_reverberant_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_reverberant_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_3_oa_reverberant_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_direct_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_direct_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_direct_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_direct_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_ambient_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_ambient_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_ambient_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_ambient_r.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_reverberant_l.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_reverberant_l.h
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_reverberant_r.cc
+        obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_4_oa_reverberant_r.h
         obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_wrapper.cc
         obr/ambisonic_binaural_decoder/binaural_filters/binaural_filters_wrapper.h
         obr/ambisonic_encoder/ambisonic_encoder.cc

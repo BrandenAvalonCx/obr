@@ -16,6 +16,7 @@
 #include "absl/strings/str_replace.h"
 #include "absl/strings/string_view.h"
 #include "gtest/gtest.h"
+#include "obr/renderer/audio_element_config.h"
 #include "obr/renderer/audio_element_type.h"
 
 namespace obr {
@@ -46,6 +47,7 @@ struct CliTestCase {
   absl::string_view wav_filename;
   absl::string_view oba_metadata_filename = "";
   bool expected_ok = true;
+  BinauralFilterProfile filter_type = BinauralFilterProfile::kAmbient;
 };
 
 using CliMainTest = ::testing::TestWithParam<CliTestCase>;
@@ -63,9 +65,9 @@ TEST_P(CliMainTest, RenderToFiles) {
                 .string();
 
   const auto output_filename = GetAndCleanupOutputFileName(".wav");
-  const auto status =
-      obr::ObrCliMain(test_case.input_type, oba_metadata_filename,
-                      input_filename, output_filename, kBufferSize);
+  const auto status = obr::ObrCliMain(
+      test_case.input_type, oba_metadata_filename, input_filename,
+      output_filename, kBufferSize, test_case.filter_type);
   EXPECT_EQ(status.ok(), test_case.expected_ok);
   EXPECT_EQ(std::filesystem::exists(output_filename), test_case.expected_ok);
 }
@@ -73,7 +75,6 @@ TEST_P(CliMainTest, RenderToFiles) {
 INSTANTIATE_TEST_SUITE_P(
     Succeeds, CliMainTest,
     ::testing::Values(CliTestCase{AudioElementType::k3OA, "7.1.4_test_3OA.wav"},
-                      CliTestCase{AudioElementType::k7OA, "7.1.4_test_7OA.wav"},
                       CliTestCase{AudioElementType::kLayout7_1_4_ch,
                                   "7.1.4_test_individual_channels.wav"},
                       CliTestCase{AudioElementType::kObjectMono,
@@ -82,9 +83,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 INSTANTIATE_TEST_SUITE_P(
     FailsWithMismatchingTypeAndInput, CliMainTest,
-    ::testing::Values(CliTestCase{AudioElementType::k3OA, "7.1.4_test_7OA.wav",
-                                  kNoObaMetadata, false},
-                      CliTestCase{AudioElementType::k7OA,
+    ::testing::Values(CliTestCase{AudioElementType::k3OA,
                                   "7.1.4_test_individual_channels.wav",
                                   kNoObaMetadata, false},
                       CliTestCase{AudioElementType::kLayout7_1_4_ch,

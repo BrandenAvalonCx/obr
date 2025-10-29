@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 package(default_visibility = ["//obr:__subpackages__"])
 
 cc_library(
@@ -7,6 +10,7 @@ cc_library(
     deps = [
         "//obr/audio_buffer",
         "//obr/cli/proto:oba_metadata_cc_proto",
+        "//obr/renderer:audio_element_config",
         "//obr/renderer:audio_element_type",
         "//obr/renderer:obr_impl",
         "@com_google_absl//absl/log",
@@ -23,6 +27,7 @@ cc_binary(
     srcs = ["obr_cli.cc"],
     deps = [
         ":obr_cli_lib",
+        "//obr/renderer:audio_element_config",
         "//obr/renderer:audio_element_type",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",

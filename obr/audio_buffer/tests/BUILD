@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 cc_test(
     name = "audio_buffer_test",
     srcs = ["audio_buffer_test.cc"],

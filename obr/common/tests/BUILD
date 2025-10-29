@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 cc_test(
     name = "ambisonic_utils_test",
     srcs = ["ambisonic_utils_test.cc"],

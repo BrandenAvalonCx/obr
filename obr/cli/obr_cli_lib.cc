@@ -21,6 +21,7 @@
 #include "absl/strings/str_cat.h"
 #include "obr/audio_buffer/audio_buffer.h"
 #include "obr/cli/proto/oba_metadata.pb.h"
+#include "obr/renderer/audio_element_config.h"
 #include "obr/renderer/audio_element_type.h"
 #include "obr/renderer/obr_impl.h"
 #include "src/dsp/read_wav_file.h"
@@ -33,8 +34,8 @@ namespace obr {
 absl::Status ObrCliMain(AudioElementType input_type,
                         const std::string& oba_metadata_filename,
                         const std::string& input_filename,
-                        const std::string& output_filename,
-                        size_t buffer_size) {
+                        const std::string& output_filename, size_t buffer_size,
+                        BinauralFilterProfile filter_profile) {
   // Parse the textproto file if OBA input is selected.
   obr_cli_proto::SourceList source_list;
   if (IsObjectType(input_type)) {
@@ -121,7 +122,7 @@ absl::Status ObrCliMain(AudioElementType input_type,
       LOG(INFO) << "    Gain: " << source.gain();
 
       // Add audio element.
-      auto status = obr_obj.AddAudioElement(input_type);
+      auto status = obr_obj.AddAudioElement(input_type, filter_profile);
       if (!status.ok()) {
         return absl::InvalidArgumentError(
             absl::StrCat("Error adding audio element: ", status.message()));
@@ -141,7 +142,7 @@ absl::Status ObrCliMain(AudioElementType input_type,
     }
   } else {
     // Add single audio element.
-    auto status = obr_obj.AddAudioElement(input_type);
+    auto status = obr_obj.AddAudioElement(input_type, filter_profile);
     if (!status.ok()) {
       return absl::InvalidArgumentError(
           absl::StrCat("Error adding audio element: ", status.message()));

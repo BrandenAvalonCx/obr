@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 package(default_visibility = ["//obr:__subpackages__"])
 
 cc_library(
@@ -19,6 +21,7 @@ cc_library(
 cc_library(
     name = "audio_element_type",
     hdrs = ["audio_element_type.h"],
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/container:btree",

@@ -210,7 +210,7 @@ bool Resampler::AreSampleRatesSupported(int source, int destination) {
   DCHECK_GT(source, 0);
   DCHECK_GT(destination, 0);
   // Determines whether sample rates are supported based upon whether our
-  // maximul filter lenhgth is big enough to hold the corresponding
+  // maximal filter length is big enough to hold the corresponding
   // interpolation filter.
   const int max_rate =
       std::max(source, destination) / FindGcd(source, destination);
